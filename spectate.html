@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spectator</title>
+  <style>
+    table, th, td {
+      border: 1px solid black;
+    }
+    th, td {
+      padding: 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Spectator</h1>
+  <table id='myTable'></table>
+  <h3>Score: <span id='myScore'></span></h3>
+  <br>
+  <button onclick="sendMsg()">Reset</button>
+</body>
+<script>
+  // Create WebSocket connection.
+  const socket = new WebSocket('ws://192.168.1.2:5000');
+  
+  // Connection opened
+  socket.addEventListener('open', function (event) {
+    console.log('Connected to the WS Server!')
+    socket.send('spectate')
+  });
+
+  // Connection closed
+  socket.addEventListener('close', function (event) {
+    console.log('Disconnected from the WS Server!')
+  });
+
+  // Listen for messages
+  socket.addEventListener('message', function (event) {
+    console.log('Message from server ', event.data);
+    var temp;
+    try {
+      temp = JSON.parse(event.data);
+      document.getElementById('myScore').innerText = temp[temp.length-1].score;
+      
+      var table = document.getElementById('myTable');
+      table.innerHTML = '';
+      var headerRow = table.insertRow();
+      var header1 = headerRow.insertCell();
+      var header2 = headerRow.insertCell();
+      var header3 = headerRow.insertCell();
+      header1.innerHTML = 'Address';
+      header2.innerHTML = 'Is hit?';
+      header3.innerHTML = 'Is spectate?';
+      for (var i=0; i<temp.length-1; i++) {
+        var row = table.insertRow();
+        var cell1 = row.insertCell();
+        var cell2 = row.insertCell();
+        var cell3 = row.insertCell();
+        cell1.innerHTML = temp[i].address;
+        cell2.innerHTML = temp[i].isHit;
+        cell3.innerHTML = temp[i].isSpectate;
+      }
+    } catch (e) {
+      // do nothing
+    }
+  });
+  // Send a msg to the websocket
+  const sendMsg = () => {
+    socket.send('reset');
+  }
+</script>
+</html>
